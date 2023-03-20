@@ -94,11 +94,10 @@ int good_hour(int sum_dob, int hour)
 void print_schedule(struct Person *people, int n)
 {
     char *days[] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
-    struct Person valid_appointments[MAX_PEOPLE] = {0};
-    struct Person invalid_appointments[MAX_PEOPLE] = {0};
-    int num_valid_appointments = 0;
-    int num_invalid_appointments = 0;
+    struct Person valid_appointments[7][MAX_PEOPLE] = {0};
+    int num_valid_appointments[7] = {0};
     bool has_valid_hour = false;
+
     for (int i = 0; i < n; i++)
     {
         struct Person p = people[i];
@@ -106,48 +105,36 @@ void print_schedule(struct Person *people, int n)
         int hour = p.date_want_to_meet->hour;
         if (good_hour(p.sum_dob, hour))
         {
-            if (day == -1)
+            if (day == 0)
                 continue;
-            if (!has_valid_hour || hour < valid_appointments[0].date_want_to_meet->hour)
+            if (!has_valid_hour || hour < valid_appointments[day-1][0].date_want_to_meet->hour)
             {
                 has_valid_hour = true;
-                num_valid_appointments = 0;
+                num_valid_appointments[day-1] = 0;
             }
-            if (hour == valid_appointments[0].date_want_to_meet->hour)
+            if (hour == valid_appointments[day-1][0].date_want_to_meet->hour)
             {
-                valid_appointments[num_valid_appointments++] = p;
+                valid_appointments[day-1][num_valid_appointments[day-1]++] = p;
             }
             else
             {
-                valid_appointments[0] = p;
-                num_valid_appointments = 1;
+                valid_appointments[day-1][0] = p;
+                num_valid_appointments[day-1] = 1;
             }
         }
-        else
+    }
+    for (int i = 0; i < 7; i++)
+    {
+        if (num_valid_appointments[i] > 0)
         {
-            if (day != -1)
+            printf("\nValid appointments on %s:\n", days[i]);
+            for (int j = 0; j < num_valid_appointments[i]; j++)
             {
-                invalid_appointments[num_invalid_appointments++] = p;
+                struct Person p = valid_appointments[i][j];
+                char appointment[100];
+                snprintf(appointment, sizeof(appointment), "%.2d:%.2d %s", p.date_want_to_meet->hour, p.date_want_to_meet->minute, p.name);
+                printf("%s\n", appointment);
             }
-        }
-    }
-    printf("\nValid appointments:\n");
-    for (int i = 0; i < num_valid_appointments; i++)
-    {
-        struct Person p = valid_appointments[i];
-        printf("%s %d:%02d %s: %s\n", days[p.date_want_to_meet->day], p.date_want_to_meet->hour, p.date_want_to_meet->minute, p.dob, p.name);
-    }
-    if (num_valid_appointments == 0 && has_valid_hour)
-    {
-        printf("No valid appointment at this hour.\n");
-    }
-    if (num_invalid_appointments > 0)
-    {
-        printf("\nInvalid appointments:\n");
-        for (int i = 0; i < num_invalid_appointments; i++)
-        {
-            struct Person p = invalid_appointments[i];
-            printf("%s %d:%02d %s: %s\n", days[p.date_want_to_meet->day], p.date_want_to_meet->hour, p.date_want_to_meet->minute, p.dob, p.name);
         }
     }
 }
